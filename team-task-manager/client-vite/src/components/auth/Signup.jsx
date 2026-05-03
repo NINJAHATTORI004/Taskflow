@@ -120,10 +120,3 @@ const Signup = () => {
 };
 
 export default Signup;
-        </div>
-      </div>
-    </div>
-  );
-};
-
-export default Signup;
