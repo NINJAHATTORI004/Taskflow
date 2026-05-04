@@ -14,6 +14,9 @@ const Dashboard = () => {
     });
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
+    const [showCreateModal, setShowCreateModal] = useState(false);
+    const [projectName, setProjectName] = useState('');
+    const [projectDesc, setProjectDesc] = useState('');
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -49,6 +52,27 @@ const Dashboard = () => {
         };
         fetchData();
     }, []);
+
+    const handleCreateProject = async () => {
+        if (!projectName.trim()) {
+            setError('Project name is required');
+            return;
+        }
+        try {
+            await projectService.createProject({
+                name: projectName,
+                description: projectDesc
+            });
+            setProjectName('');
+            setProjectDesc('');
+            setShowCreateModal(false);
+            // Refresh projects
+            const { data: projectsData } = await projectService.getProjects();
+            setProjects(projectsData);
+        } catch (err) {
+            setError(getErrorMessage(err));
+        }
+    };
 
     const handleLogout = () => {
         localStorage.removeItem('token');
@@ -158,7 +182,15 @@ const Dashboard = () => {
 
                 {/* Projects Section */}
                 <div>
-                    <h2 className="text-2xl font-bold text-gray-900 mb-6">Your Projects</h2>
+                    <div className="flex justify-between items-center mb-6">
+                        <h2 className="text-2xl font-bold text-gray-900">Your Projects</h2>
+                        <button
+                            onClick={() => setShowCreateModal(true)}
+                            className="px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-all duration-200 shadow-md hover:shadow-lg"
+                        >
+                            + New Project
+                        </button>
+                    </div>
                     {projects.length === 0 ? (
                         <div className="text-center py-12 bg-white rounded-2xl shadow-md">
                             <svg className="w-16 h-16 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -194,6 +226,51 @@ const Dashboard = () => {
                         </div>
                     )}
                 </div>
+
+                {/* Create Project Modal */}
+                {showCreateModal && (
+                    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                        <div className="bg-white rounded-2xl shadow-2xl p-8 w-96">
+                            <h3 className="text-xl font-bold text-gray-900 mb-6">Create New Project</h3>
+                            <div className="space-y-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">Project Name</label>
+                                    <input
+                                        type="text"
+                                        value={projectName}
+                                        onChange={(e) => setProjectName(e.target.value)}
+                                        placeholder="Enter project name"
+                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">Description (optional)</label>
+                                    <textarea
+                                        value={projectDesc}
+                                        onChange={(e) => setProjectDesc(e.target.value)}
+                                        placeholder="Enter project description"
+                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        rows="3"
+                                    />
+                                </div>
+                            </div>
+                            <div className="flex gap-4 mt-6">
+                                <button
+                                    onClick={() => setShowCreateModal(false)}
+                                    className="flex-1 px-4 py-2 bg-gray-200 text-gray-800 font-semibold rounded-lg hover:bg-gray-300 transition-all duration-200"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={handleCreateProject}
+                                    className="flex-1 px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-all duration-200"
+                                >
+                                    Create
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
             </div>
         </div>
     );
