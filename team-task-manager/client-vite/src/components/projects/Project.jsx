@@ -10,6 +10,9 @@ const Project = () => {
     const [project, setProject] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
+    const [showAddMember, setShowAddMember] = useState(false);
+    const [memberEmail, setMemberEmail] = useState('');
+    const [allUsers, setAllUsers] = useState([]);
     const { id: projectId } = useParams();
     const navigate = useNavigate();
 
@@ -50,6 +53,38 @@ const Project = () => {
         );
     }
 
+    const handleAddMember = async (userId) => {
+        try {
+            setError('');
+            await projectService.addMember(projectId, userId);
+            // Refresh project data
+            const { data: projectsData } = await projectService.getProjects();
+            const updatedProject = projectsData.find(p => p._id === projectId);
+            setProject(updatedProject);
+            setShowAddMember(false);
+            setMemberEmail('');
+        } catch (err) {
+            setError(getErrorMessage(err));
+            console.error(err);
+        }
+    };
+
+    const handleRemoveMember = async (memberId) => {
+        if (window.confirm('Are you sure you want to remove this member?')) {
+            try {
+                setError('');
+                await projectService.removeMember(projectId, memberId);
+                // Refresh project data
+                const { data: projectsData } = await projectService.getProjects();
+                const updatedProject = projectsData.find(p => p._id === projectId);
+                setProject(updatedProject);
+            } catch (err) {
+                setError(getErrorMessage(err));
+                console.error(err);
+            }
+        }
+    };
+
     return (
         <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50">
             {/* Header */}
@@ -85,6 +120,95 @@ const Project = () => {
                 {error && (
                     <div className="mb-6 p-4 bg-red-50 border-l-4 border-red-500 rounded-lg">
                         <p className="text-sm text-red-800 font-medium">{error}</p>
+                    </div>
+                )}
+
+                {/* Team Members Section */}
+                {project && (
+                    <div className="mb-8 bg-white rounded-2xl shadow-md p-6">
+                        <div className="flex justify-between items-center mb-6">
+                            <div>
+                                <h2 className="text-2xl font-bold text-gray-900">Team Members</h2>
+                                <p className="text-sm text-gray-600 mt-1">Manage your project team</p>
+                            </div>
+                            <button
+                                onClick={() => setShowAddMember(true)}
+                                className="px-4 py-2 bg-emerald-500 text-white font-semibold rounded-lg hover:bg-emerald-600 transition-all duration-200"
+                            >
+                                + Add Member
+                            </button>
+                        </div>
+
+                        {/* Members Grid */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            {project.teamMembers && project.teamMembers.length > 0 ? (
+                                project.teamMembers.map(member => (
+                                    <div key={member._id} className="p-4 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl border border-blue-200 hover:shadow-md transition-all">
+                                        <div className="flex items-center justify-between">
+                                            <div className="flex items-center space-x-3">
+                                                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-indigo-500 flex items-center justify-center text-white font-bold text-sm">
+                                                    {member.name.charAt(0)}
+                                                </div>
+                                                <div>
+                                                    <p className="font-semibold text-gray-900">{member.name}</p>
+                                                    <p className="text-xs text-gray-600">{member.email}</p>
+                                                </div>
+                                            </div>
+                                            <button
+                                                onClick={() => handleRemoveMember(member._id)}
+                                                className="text-red-500 hover:text-red-700 transition-colors"
+                                            >
+                                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                </svg>
+                                            </button>
+                                        </div>
+                                    </div>
+                                ))
+                            ) : (
+                                <p className="text-gray-500 col-span-full">No team members yet. Add one to get started.</p>
+                            )}
+                        </div>
+
+                        {/* Add Member Modal */}
+                        {showAddMember && (
+                            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 rounded-lg">
+                                <div className="bg-white rounded-2xl shadow-2xl p-6 max-w-md w-full mx-4">
+                                    <h3 className="text-lg font-bold text-gray-900 mb-4">Add Team Member</h3>
+                                    <p className="text-sm text-gray-600 mb-4">Enter the user ID of the member you want to add to this project.</p>
+                                    <input
+                                        type="text"
+                                        value={memberEmail}
+                                        onChange={(e) => setMemberEmail(e.target.value)}
+                                        placeholder="Enter user ID"
+                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 mb-6"
+                                    />
+                                    <div className="flex gap-4">
+                                        <button
+                                            onClick={() => {
+                                                setShowAddMember(false);
+                                                setMemberEmail('');
+                                            }}
+                                            className="flex-1 px-4 py-2 bg-gray-200 text-gray-800 font-semibold rounded-lg hover:bg-gray-300 transition-all"
+                                        >
+                                            Cancel
+                                        </button>
+                                        <button
+                                            onClick={() => {
+                                                if (!memberEmail.trim()) {
+                                                    setError('Please enter a user ID');
+                                                    return;
+                                                }
+                                                handleAddMember(memberEmail.trim());
+                                            }}
+                                            className="flex-1 px-4 py-2 bg-emerald-500 text-white font-semibold rounded-lg hover:bg-emerald-600 transition-all disabled:opacity-50"
+                                        >
+                                            Add Member
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
                     </div>
                 )}
 

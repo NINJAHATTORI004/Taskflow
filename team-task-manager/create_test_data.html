@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Create Test Data</title>
+    <style>
+        body { font-family: Arial; padding: 20px; line-height: 1.6; }
+        button { padding: 10px 20px; margin: 10px 0; cursor: pointer; }
+        pre { background: #f4f4f4; padding: 10px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>Create Test Project & Task</h1>
+    <p id="status">Ready</p>
+    <button onclick="createProject()">1. Create Project</button>
+    <button onclick="createTask()">2. Create Task</button>
+    <button onclick="goToProject()">3. Go to Project</button>
+    <button onclick="clearLog()">Clear Log</button>
+    
+    <h3>Response Log:</h3>
+    <pre id="log"></pre>
+
+    <script>
+        const token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjp7ImlkIjoiNjlmOGVmNWRhMjU0MzY2ZTM5YmM3NWIzIiwicm9sZSI6IkFkbWluIn0sImlhdCI6MTc3NzkyMTg4NSwiZXhwIjoxNzc3OTI1NDg1fQ.aXFQWQH5jq-ZGJ52-GUwEYd-m9xnMZjJsko0OMeNTJc';
+        const baseURL = 'https://taskflow-backend-production-8d5e.up.railway.app/api';
+        let projectId = null;
+
+        function log(msg) {
+            const logEl = document.getElementById('log');
+            logEl.textContent += msg + '\n';
+        }
+
+        function clearLog() {
+            document.getElementById('log').textContent = '';
+        }
+
+        async function createProject() {
+            try {
+                log('Creating project...');
+                const res = await fetch(baseURL + '/projects', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + token
+                    },
+                    body: JSON.stringify({
+                        name: 'Test Project E2E ' + new Date().getTime(),
+                        description: 'Testing task assignment'
+                    })
+                });
+                const data = await res.json();
+                log('Status: ' + res.status);
+                log(JSON.stringify(data, null, 2));
+                if (data._id || data.data?._id) {
+                    projectId = data._id || data.data._id;
+                    log('Project ID: ' + projectId);
+                }
+            } catch (e) {
+                log('Error: ' + e.message);
+            }
+        }
+
+        async function createTask() {
+            if (!projectId) {
+                log('Error: No project ID. Create a project first.');
+                return;
+            }
+            try {
+                log('Creating task...');
+                const res = await fetch(baseURL + '/tasks', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + token
+                    },
+                    body: JSON.stringify({
+                        projectId: projectId,
+                        title: 'Test Task for Assignment',
+                        description: 'Verify assignment button shows',
+                        status: 'To Do',
+                        dueDate: new Date(Date.now() + 7*24*60*60*1000).toISOString()
+                    })
+                });
+                const data = await res.json();
+                log('Status: ' + res.status);
+                log(JSON.stringify(data, null, 2));
+            } catch (e) {
+                log('Error: ' + e.message);
+            }
+        }
+
+        function goToProject() {
+            if (!projectId) {
+                log('Error: No project ID');
+                return;
+            }
+            window.open('https://taskflow-frontend-three-kappa.vercel.app/project/' + projectId);
+        }
+    </script>
+</body>
+</html>
