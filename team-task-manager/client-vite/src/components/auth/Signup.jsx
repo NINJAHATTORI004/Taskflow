@@ -26,8 +26,14 @@ const Signup = () => {
     setLoading(true);
     setError('');
     try {
-      await authService.signup({ name, email, password, role });
-      navigate('/login');
+      const { data } = await authService.signup({ name, email, password, role });
+      localStorage.setItem('token', data.token);
+      
+      // Decode JWT to get role
+      const decoded = JSON.parse(atob(data.token.split('.')[1]));
+      localStorage.setItem('userRole', decoded.user.role);
+      
+      navigate('/dashboard');
     } catch (ex) {
       setError(getErrorMessage(ex));
       console.error(ex);

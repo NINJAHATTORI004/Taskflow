@@ -1,23 +1,29 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import taskService from '../../services/taskService';
+import projectService from '../../services/projectService';
 import TaskBoard from '../tasks/TaskBoard';
 import { getErrorMessage } from '../../utils/errorHandler';
 
 const Project = () => {
     const [tasks, setTasks] = useState([]);
+    const [project, setProject] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const { id: projectId } = useParams();
     const navigate = useNavigate();
 
     useEffect(() => {
-        const fetchTasks = async () => {
+        const fetchData = async () => {
             try {
                 setLoading(true);
                 setError('');
-                const { data } = await taskService.getTasks(projectId);
-                setTasks(data);
+                const { data: tasksData } = await taskService.getTasks(projectId);
+                setTasks(tasksData);
+                
+                const { data: projectsData } = await projectService.getProjects();
+                const currentProject = projectsData.find(p => p._id === projectId);
+                setProject(currentProject);
             } catch (error) {
                 setError(getErrorMessage(error));
                 console.error(error);
@@ -25,7 +31,7 @@ const Project = () => {
                 setLoading(false);
             }
         };
-        fetchTasks();
+        fetchData();
     }, [projectId]);
 
     if (loading) {
@@ -92,7 +98,7 @@ const Project = () => {
                     </div>
                 )}
 
-                {tasks.length > 0 && <TaskBoard tasks={tasks} setTasks={setTasks} />}
+                {tasks.length > 0 && <TaskBoard tasks={tasks} setTasks={setTasks} project={project} />}
             </div>
         </div>
     );

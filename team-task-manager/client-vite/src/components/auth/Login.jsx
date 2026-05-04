@@ -26,6 +26,11 @@ const Login = () => {
     try {
       const { data } = await authService.login({ email, password });
       localStorage.setItem('token', data.token);
+      
+      // Decode JWT to get role
+      const decoded = JSON.parse(atob(data.token.split('.')[1]));
+      localStorage.setItem('userRole', decoded.user.role);
+      
       navigate('/dashboard');
     } catch (ex) {
       setError(getErrorMessage(ex));
