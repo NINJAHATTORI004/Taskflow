@@ -3,14 +3,17 @@
 A lightweight team productivity system with real-time task ownership, role-based workflows, and actionable dashboards.
 
 ## Features
-- ✅ Authentication (JWT)
-- 👥 Role-based access (Admin/Member)
-- 📋 Project & Task Management
-- 📊 Dashboard insights
+- ✅ Authentication (JWT with role-based tokens)
+- 👥 Role-based access (Admin/Member with granular permissions)
+- 📋 Project & Task Management with member collaboration
+- 👨‍💼 Team Member Management (add/remove members from projects)
+- 📊 Dashboard insights with real-time statistics
 - 🎯 Kanban board with drag-and-drop functionality
-- 🚨 Overdue task highlighting
-- 🛡️ Secure API endpoints
-- 📱 Responsive design with Tailwind CSS
+- 🔄 Task assignment to team members with modal selection
+- 🚨 Overdue task highlighting and status tracking
+- 🛡️ Secure API endpoints with authentication middleware
+- 📱 Responsive design with Tailwind CSS and modern UI
+- 🎨 Beautiful gradient backgrounds and smooth animations
 
 ## Tech Stack
 - **Frontend:** React 19, Vite, Tailwind CSS, React Router
@@ -28,16 +31,23 @@ A lightweight team productivity system with real-time task ownership, role-based
 [Link to be added after deployment]
 
 ## API Endpoints
-- `POST /api/auth/signup` - User registration
-- `POST /api/auth/login` - User login
-- `GET /api/projects` - Get all projects for user
+
+### Authentication
+- `POST /api/auth/signup` - User registration (creates Admin or Member role)
+- `POST /api/auth/login` - User login with JWT token
+
+### Projects (Admin Only)
+- `GET /api/projects` - Get all projects (created by or member of)
 - `POST /api/projects` - Create new project (Admin only)
-- `PUT /api/projects/:id/members` - Add member to project (Admin only)
-- `DELETE /api/projects/:id/members/:memberId` - Remove member from project (Admin only)
+- `PUT /api/projects/:id/members` - Add member to project
+- `DELETE /api/projects/:id/members/:memberId` - Remove member from project
+
+### Tasks
 - `POST /api/tasks` - Create new task (Admin only)
-- `GET /api/tasks/project/:projectId` - Get tasks for a project
-- `PUT /api/tasks/:id/status` - Update task status
+- `GET /api/tasks/:projectId` - Get tasks for a project
+- `PUT /api/tasks/:id/status` - Update task status (drag-and-drop)
 - `PUT /api/tasks/:id/assign` - Assign task to user (Admin only)
+- `GET /api/tasks/:id` - Get single task details
 
 ## Setup Instructions
 
